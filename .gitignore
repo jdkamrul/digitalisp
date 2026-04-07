@@ -1,0 +1,28 @@
+.env
+/database/*.sqlite
+/tmp/
+/public/assets/uploads/
+*.log
+.DS_Store
+/.idea/
+/.vscode/
+/vendor/
+/node_modules/
+/screensort/
+/storage/
+
+# One-time setup & test scripts
+check_users.php
+copy_project.php
+create_config_table.php
+create_radius_tables.php
+init_sqlite.php
+migrate.php
+reset_password.php
+public/test_db_connection.php
+public/test_packages.php
+public/test_profiles.php
+database/migrate_olt.php
+
+# Sensitive notes
+note.txt
