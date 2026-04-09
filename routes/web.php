@@ -28,6 +28,7 @@ Router::prefix('/customers', function() {
     Router::post('/reconnect/{id}', 'CustomerController@reconnect', ['AuthMiddleware']);
     Router::post('/delete/{id}', 'CustomerController@delete', ['AuthMiddleware']);
     Router::post('/import', 'CustomerController@import', ['AuthMiddleware']);
+    Router::get('/download-template', 'CustomerController@downloadTemplate', ['AuthMiddleware']);
 });
 
 // ── Billing ───────────────────────────────────────────────────────

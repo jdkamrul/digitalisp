@@ -235,13 +235,29 @@
         </div>
         <form method="POST" action="<?= base_url('customers/import') ?>" enctype="multipart/form-data">
             <div class="modal-body">
+                <!-- Demo download strip -->
+                <div style="background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(139,92,246,0.08));border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:2px;"><i class="fa-solid fa-file-excel" style="margin-right:5px;"></i>Download Template</div>
+                        <div style="font-size:11px;color:var(--text2);">10 demo rows · 15 columns · field guide included</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                        <a href="<?= base_url('customers/download-template?type=xlsx') ?>" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;" title="Download Excel template">
+                            <i class="fa-solid fa-file-excel" style="color:#1d6f42;"></i> XLSX
+                        </a>
+                        <a href="<?= base_url('customers/download-template?type=csv') ?>" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;" title="Download CSV template">
+                            <i class="fa-solid fa-file-csv" style="color:#217346;"></i> CSV
+                        </a>
+                    </div>
+                </div>
+
                 <p style="color:var(--text2);font-size:13px;margin-bottom:16px;">
-                    Upload a CSV file with columns:<br>
-                    <code style="display:block;background:var(--bg3);padding:6px;margin-top:8px;border-radius:4px;">Name, Phone, Address, Package_Name, Zone_Name</code>
+                    Upload a CSV or Excel file. Required columns:<br>
+                    <code style="display:block;background:var(--bg3);padding:6px;margin-top:8px;border-radius:4px;font-size:11px;">full_name, phone, address, package_name, zone_name</code>
                 </p>
                 <div style="margin-bottom:12px;">
-                    <label class="form-label">Select CSV File</label>
-                    <input type="file" name="csv_file" accept=".csv" class="form-input" required>
+                    <label class="form-label">Select CSV / Excel File</label>
+                    <input type="file" name="csv_file" accept=".csv,.xlsx,.xls" class="form-input" required>
                 </div>
                 <div style="font-size:11px; color:var(--text2); background:var(--bg3); padding:8px; border-radius:4px;">
                     <i class="fa-solid fa-info-circle"></i> Package and Zone names must match existing ones in the system.

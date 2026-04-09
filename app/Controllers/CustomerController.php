@@ -415,6 +415,51 @@ class CustomerController {
         redirect(base_url('customers'));
     }
 
+    /**
+     * Download import template (XLSX or CSV demo file).
+     * GET /customers/download-template?type=xlsx|csv
+     */
+    public function downloadTemplate(): void {
+        $type     = strtolower(sanitize($_GET['type'] ?? 'xlsx'));
+        $allowed  = ['xlsx', 'csv'];
+        if (!in_array($type, $allowed, true)) $type = 'xlsx';
+
+        $fileMap = [
+            'xlsx' => BASE_PATH . '/docs/samples/customers_import_template.xlsx',
+            'csv'  => BASE_PATH . '/docs/samples/customers_import_template.csv',
+        ];
+
+        $filePath = $fileMap[$type];
+
+        // Auto-generate if missing
+        if (!file_exists($filePath)) {
+            $genScript = BASE_PATH . '/scripts/generate_demo_excel.php';
+            if (file_exists($genScript)) {
+                require_once $genScript;
+            }
+        }
+
+        if (!file_exists($filePath)) {
+            $_SESSION['error'] = 'Template file not found. Run: php scripts/generate_demo_excel.php';
+            redirect(base_url('customers'));
+        }
+
+        $mimeMap = [
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'csv'  => 'text/csv; charset=utf-8',
+        ];
+
+        $filename = 'customers_import_template.' . $type;
+
+        header('Content-Type: ' . $mimeMap[$type]);
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        readfile($filePath);
+        exit;
+    }
+
     public function apiSearch(): void {
         header('Content-Type: application/json');
         if (!isset($_SESSION['user_id'])) {
