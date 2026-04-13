@@ -523,10 +523,13 @@ class GponController {
 
     public function onus(): void {
         $pageTitle = 'ONU / CPE Devices'; $currentPage = 'gpon'; $currentSubPage = 'onus';
-        $page   = max(1,(int)($_GET['page']??1)); $limit=30; $offset=($page-1)*$limit;
+        $page   = max(1,(int)($_GET['page']??1)); $limit=50; $offset=($page-1)*$limit;
         $onus   = $this->db->fetchAll(
-            "SELECT o.*, c.full_name as customer_name, c.customer_code, s.name as splitter_name,
-                    COALESCE(olt_d.name, olt_s.name) as olt_name
+            "SELECT o.*,
+                    c.full_name as customer_name, c.customer_code, c.id as customer_id,
+                    s.name as splitter_name,
+                    COALESCE(olt_d.name, olt_s.name) as olt_name,
+                    COALESCE(olt_d.id, olt_s.id) as olt_id_resolved
              FROM onus o
              LEFT JOIN customers c ON c.id=o.customer_id
              LEFT JOIN splitters s ON s.id=o.splitter_id
@@ -541,19 +544,29 @@ class GponController {
     }
 
     public function storeOnu(): void {
+        $serial = strtoupper(trim(sanitize($_POST['serial_number'] ?? '')));
+        if (empty($serial)) { $_SESSION['error'] = 'Serial number is required.'; redirect(base_url('gpon/onus')); }
+
+        // Check duplicate
+        $exists = $this->db->fetchOne("SELECT id FROM onus WHERE serial_number=?", [$serial]);
+        if ($exists) { $_SESSION['error'] = "ONU with serial $serial already exists."; redirect(base_url('gpon/onus')); }
+
         $this->db->insert('onus', [
-            'serial_number' => sanitize($_POST['serial_number'] ?? ''),
-            'model'         => sanitize($_POST['model'] ?? ''),
-            'brand'         => sanitize($_POST['brand'] ?? ''),
-            'onu_type'      => sanitize($_POST['onu_type'] ?? 'indoor'),
-            'mac_address'   => sanitize($_POST['mac_address'] ?? ''),
-            'splitter_id'   => (int)$_POST['splitter_id'] ?: null,
-            'olt_id'        => (int)($_POST['olt_id'] ?? 0) ?: null,
-            'branch_id'     => (int)($_POST['branch_id'] ?? $_SESSION['branch_id']),
-            'status'        => 'stock',
-            'purchase_price'=> (float)($_POST['purchase_price'] ?? 0),
-            'installed_date'=> $_POST['installed_date'] ?? null,
+            'serial_number'  => $serial,
+            'model'          => sanitize($_POST['model'] ?? ''),
+            'brand'          => sanitize($_POST['brand'] ?? ''),
+            'onu_type'       => sanitize($_POST['onu_type'] ?? 'indoor'),
+            'mac_address'    => strtoupper(sanitize($_POST['mac_address'] ?? '')),
+            'splitter_id'    => (int)($_POST['splitter_id'] ?? 0) ?: null,
+            'olt_id'         => (int)($_POST['olt_id'] ?? 0) ?: null,
+            'branch_id'      => (int)($_POST['branch_id'] ?? $_SESSION['branch_id'] ?? 0) ?: null,
+            'status'         => 'stock',
+            'purchase_price' => (float)($_POST['purchase_price'] ?? 0) ?: null,
+            'installed_date' => !empty($_POST['installed_date']) ? $_POST['installed_date'] : null,
+            'warranty_expiry'=> !empty($_POST['warranty_expiry']) ? $_POST['warranty_expiry'] : null,
+            'notes'          => sanitize($_POST['notes'] ?? ''),
         ]);
+        $_SESSION['success'] = "ONU $serial added successfully.";
         redirect(base_url('gpon/onus'));
     }
 
@@ -613,16 +626,21 @@ class GponController {
         $id = (int)($_POST['id'] ?? 0);
         if (!$id) redirect(base_url('gpon/onus'));
         $this->db->update('onus', [
-            'serial_number'  => sanitize($_POST['serial_number'] ?? ''),
+            'serial_number'  => strtoupper(trim(sanitize($_POST['serial_number'] ?? ''))),
             'model'          => sanitize($_POST['model'] ?? ''),
             'brand'          => sanitize($_POST['brand'] ?? ''),
             'onu_type'       => sanitize($_POST['onu_type'] ?? 'indoor'),
-            'mac_address'    => sanitize($_POST['mac_address'] ?? ''),
-            'splitter_id'    => (int)$_POST['splitter_id'] ?: null,
-            'customer_id'    => (int)$_POST['customer_id'] ?: null,
+            'mac_address'    => strtoupper(sanitize($_POST['mac_address'] ?? '')),
+            'splitter_id'    => (int)($_POST['splitter_id'] ?? 0) ?: null,
+            'customer_id'    => (int)($_POST['customer_id'] ?? 0) ?: null,
             'status'         => sanitize($_POST['status'] ?? 'stock'),
-            'purchase_price' => (float)($_POST['purchase_price'] ?? 0),
+            'signal_level'   => $_POST['signal_level'] !== '' ? (float)$_POST['signal_level'] : null,
+            'purchase_price' => (float)($_POST['purchase_price'] ?? 0) ?: null,
+            'installed_date' => !empty($_POST['installed_date']) ? $_POST['installed_date'] : null,
+            'warranty_expiry'=> !empty($_POST['warranty_expiry']) ? $_POST['warranty_expiry'] : null,
+            'notes'          => sanitize($_POST['notes'] ?? ''),
         ], 'id=?', [$id]);
+        $_SESSION['success'] = 'ONU updated successfully.';
         redirect(base_url('gpon/onus'));
     }
 
